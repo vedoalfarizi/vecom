@@ -7,32 +7,34 @@ import java.util.UUID;
 import com.example.vecom.exception.BadRequestException;
 import com.example.vecom.model.User;
 import com.example.vecom.repository.UserRepository;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
 
-  private final UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-  public UserService(UserRepository userRepository) {
-    this.userRepository = userRepository;
-  }
+  @Autowired
+  private BCryptPasswordEncoder bCryptPasswordEncoder;
 
-  public User registeUser(User user) throws BadRequestException {
-    Optional<User> userOptional = userRepository.findByEmail(user.getEmail());
-    if (userOptional.isPresent()) {
+  public void save(User user) throws BadRequestException {
+    if(!user.getPasswordConfirm().equals(user.getPassword())){
+      throw new BadRequestException("Confirm password not match");
+    }
+
+    User userResult = userRepository.findByEmail(user.getEmail());
+    if(userResult != null){
       throw new BadRequestException("Email has been taken");
     }
 
-    return userRepository.save(user);
+    user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+    userRepository.save(user);
   }
 
-  // public Optional<User> login(String email, String password) {
-  // return userRepository.login(email, password);
-  // }
-
-  public User updatUser(User user) {
+  public User updateUser(User user) {
     return userRepository.save(user);
   }
 
@@ -44,8 +46,11 @@ public class UserService {
     return userRepository.findById(id);
   }
 
+  public User findByEmail(String email){
+    return userRepository.findByEmail(email);
+  }
+
   public void deleteUserById(UUID id) {
     userRepository.deleteById(id);
   }
-
 }

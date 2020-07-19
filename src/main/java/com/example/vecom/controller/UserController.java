@@ -10,55 +10,47 @@ import com.example.vecom.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1")
 public class UserController {
 
   @Autowired
-  private final UserService userService;
+  private UserService userService;
 
-  @Autowired
-  private BCryptPasswordEncoder bCryptPasswordEncoder;
-
-  public UserController(UserService userService) {
-    this.userService = userService;
-  }
-
-  @GetMapping
+  @GetMapping("/users")
   public List<User> getAllUsers() {
     return userService.findAllUsers();
   }
 
-  @GetMapping("/{id}")
+  @GetMapping("/users/{id}")
   public ResponseEntity<User> getUserById(@PathVariable UUID id) {
     return userService.findUserById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
-  @PostMapping
-  @ResponseStatus(HttpStatus.CREATED)
-  public User creatUser(@RequestBody @Validated User user) throws BadRequestException {
-    user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-    return userService.registeUser(user);
+  @PostMapping("/register")
+  public ResponseEntity<String> creatUser(@RequestBody @Validated User user) throws BadRequestException {
+    userService.save(user);
+    return ResponseEntity.status(HttpStatus.CREATED).body("Register success");
   }
 
-  @PutMapping("/{id}")
-  public ResponseEntity<User> updateUser(@PathVariable UUID id, @RequestBody @Validated User user) {
+  @PutMapping("/users/{id}")
+  public ResponseEntity<String> updateUser(@PathVariable UUID id, @RequestBody @Validated User user) {
     return userService.findUserById(id).map(userObj -> {
       userObj.setId(id);
       userObj.setFullName(user.getFullname());
-      return ResponseEntity.ok(userService.updatUser(userObj));
+      userService.updateUser(userObj);
+      return ResponseEntity.ok("Update success");
     }).orElseGet(() -> ResponseEntity.notFound().build());
   }
 
-  @DeleteMapping("/{id}")
-  public ResponseEntity<User> deleteUser(@PathVariable UUID id) {
+  @DeleteMapping("/users/{id}")
+  public ResponseEntity<String> deleteUser(@PathVariable UUID id) {
     return userService.findUserById(id).map(user -> {
       userService.deleteUserById(id);
-      return ResponseEntity.ok(user);
+      return ResponseEntity.ok("Delete success");
     }).orElseGet(() -> ResponseEntity.notFound().build());
   }
 }

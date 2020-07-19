@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -22,15 +23,21 @@ public class User {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
+  @NotNull(message = "Please provide a full name")
   @Column(name = "fullname", nullable = false, length = 30)
   private String fullname;
 
+  @Email
   @Column(name = "email", nullable = false, unique = true, length = 50)
   private String email;
 
   @JsonProperty(access = Access.WRITE_ONLY)
   @Column(name = "password", nullable = false, length = 100)
   private String password;
+
+  @Transient
+  @JsonProperty(access = Access.WRITE_ONLY)
+  private String passwordConfirm;
 
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
@@ -57,10 +64,6 @@ public class User {
     return email;
   }
 
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
   public String getPassword() {
     return password;
   }
@@ -69,11 +72,11 @@ public class User {
     this.password = password;
   }
 
-  public Date getCreatedAt() {
-    return createdAt;
+  public String getPasswordConfirm() {
+    return passwordConfirm;
   }
 
-  public void setCreatedAt(Date createdAt) {
-    this.createdAt = createdAt;
+  public void setPasswordConfirm(String passwordConfirm) {
+    this.passwordConfirm = passwordConfirm;
   }
 }
